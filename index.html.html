@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VSC.Invoice — Proforma (Blank Launch)</title>
+  <meta name="theme-color" content="#2563eb">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 18px; color: #111; background:#f7f8fb }
+    .container { max-width:900px; margin:0 auto; background: #fff; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06) }
+    .center { text-align:center }
+    .title { font-weight:700; color:#000; font-size:20px; margin-bottom:6px }
+    .firm { font-weight:700; color:#0b3d91; margin:0 }
+    .firm.big { font-size:22px }
+    .sub { color:#0b3d91; margin:4px 0 8px 0 }
+    .meta { margin-top: 6px; font-size:14px }
+    .row { display:flex; justify-content:space-between; gap:12px; margin-top:8px; align-items:flex-start }
+    .table { width:100%; border-collapse: collapse; margin-top:12px }
+    .table th, .table td { border:1px solid #ccc; padding:8px }
+    .right { text-align:right }
+    .small { font-size: 12px }
+    .bank-details { margin-top:14px; border-top:1px dashed #ddd; padding-top:8px; font-size:13px }
+    .no-print { display:block }
+    .btn { display:inline-block; padding:8px 12px; border-radius:6px; background:#2563eb; color:#fff; text-decoration:none; margin-right:8px }
+    input, textarea { padding:6px; border:1px solid #ccc; border-radius:4px }
+    textarea { resize:vertical }
+    .footer { margin-top:18px }
+    .auth { font-size:12px; margin-top:28px; text-align:right }
+    label.req::after { content: ' *'; color: red }
+    .error { border-color: red }
+    @media print { .no-print { display:none } }
+  </style>
+</head>
+<body>
+  <div class="container" id="invoice-root">
+    <div class="center">
+      <div class="title">PROFORMA TAX INVOICE</div>
+      <div class="firm big">VINOD SINGHAL &amp; CO. LLP</div>
+      <div class="sub">CHARTERED ACCOUNTANTS</div>
+      <div class="meta">GSTIN: 18AADFV8895M1Z3</div>
+      <div class="meta">Phone: 7002609752</div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <div style="flex:1; min-width:260px">
+        <div style="margin-bottom:6px"><strong>Party:</strong> <span id="partyName">Central Bank of India</span></div>
+        <div style="margin-bottom:6px"><label class="req">Branch</label><br><input id="branch" placeholder="Enter branch" style="width:100%"></div>
+        <div style="margin-bottom:6px"><strong>Nature of Service:</strong> Due Diligence Report</div>
+      </div>
+      <div style="width:320px">
+        <div style="margin-bottom:8px"><label class="req">Invoice No</label><br><input id="invNo" value="VSC/2526/" style="width:100%"></div>
+        <div style="margin-bottom:8px"><label class="req">Date</label><br><input id="invDate" type="date" style="width:100%"></div>
+      </div>
+    </div>
+
+    <table class="table" id="itemsTbl">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th style="width:120px">HSN / SAC</th>
+          <th style=\"width:120px\">HSN / SAC</th>
+          <th style="width:120px">Rate</th>
+          <th style="width:80px">Total GST %</th>
+          <th style="width:120px">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Due Diligence Report — <br><label class="req">Narration</label><br><input id="narration" placeholder="Narration / details" style="width:98%"></td>
+          <td class="center">998214</td>
+          <td class=\"center\">998214</td>
+          <td><input id="rate" type="number" value="0" step="0.01" style="width:100%"></td>
+          <td><input id="tax" type="number" value="18" step="0.01" style="width:100%"></td>
+          <td id="amount" class="right">0.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:8px; width:100%; display:flex; justify-content:flex-end">
+      <div style="width:320px">
+        <div class="row small"><div>Taxable Value</div><div id="taxable" class="right">0.00</div></div>
+        <div class="row small"><div>Total GST</div><div id="totalgst" class="right">0.00</div></div>
+        <hr/>
+        <div class="row small"><div><strong>Total</strong></div><div id="total" class="right"><strong>0.00</strong></div></div>
+      </div>
+    </div>
+
+    <div class="bank-details" id="bankDetails">
+      <strong>Bank Particulars</strong>
+      <div>Account Name: BIKASH CHORADIA</div>
+      <div>Bank Name: CENTRAL BANK OF INDIA</div>
+      <div>Account No.: 5274142844</div>
+      <div>Branch Name: BASISHTA CHARIALI</div>
+      <div>IFSC Code: CBIN0284212</div>
+    </div>
+
+    <div class="footer">
+      <div class="small">Note: This is a Computer generated Invoice, sign is not required.</div>
+      <div class="auth">Authorised Signatory</div>
+    </div>
+
+    <div style="margin-top:12px; display:flex; gap:8px; align-items:center" class="no-print">
+      <a class="btn" id="downloadPdf">Download PDF</a>
+      <a class="btn" id="previewPdf" style="background:#0b74de">Preview PDF</a>
+      <div style="margin-left:auto; color:#666; font-size:13px">App name: <strong>VSC.Invoice</strong></div>
+    </div>
+
+  </div>
+
+<!-- html2pdf library (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
+<script>
+function formatNumber(n){ return Number(n||0).toFixed(2); }
+function $(id){return document.getElementById(id)}
+
+// Launch blank
+function clearInputsOnLoad(){
+  $('branch').value = '';
+  $('invNo').value = 'VSC/2526/';
+  $('invDate').value = new Date().toISOString().slice(0,10);
+  $('narration').value = '';
+  $('rate').value = '';
+  $('tax').value = 18;
+  calc();
+}
+
+// NEW calculation (since no QTY)
+// Taxable Value = Rate
+// GST = Rate * (tax%)
+// Total = Rate + GST
+function calc(){
+  const r = parseFloat($('rate').value)||0;
+  const t = parseFloat($('tax').value)||0;
+  const taxable = r;
+  const taxAmt = taxable * (t/100);
+
+  $('taxable').textContent = formatNumber(taxable);
+  $('totalgst').textContent = formatNumber(taxAmt);
+  $('amount').textContent = formatNumber(taxable + taxAmt);
+  $('total').textContent = formatNumber(taxable + taxAmt);
+}
+
+['rate','tax'].forEach(id=>{document.getElementById(id).addEventListener('input', calc)});
+
+// Validation (removed qty logic)
+function validateAll(){
+  ['branch','invNo','invDate','narration','rate'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('error'); });
+
+  const branch = $('branch').value.trim();
+  const invNo = $('invNo').value.trim();
+  const invDate = $('invDate').value;
+  const narration = $('narration').value.trim();
+  const rate = parseFloat($('rate').value) || 0;
+
+  if(!branch){ $('branch').classList.add('error'); alert('Please enter Branch.'); return false; }
+  const prefix = 'VSC/2526/';
+  if(!invNo || !invNo.startsWith(prefix) || invNo.length <= prefix.length){ $('invNo').classList.add('error'); alert('Invoice number must be like VSC/2526/0001'); return false; }
+  if(!invDate){ $('invDate').classList.add('error'); alert('Please select Date.'); return false; }
+  if(!narration){ $('narration').classList.add('error'); alert('Please enter Narration.'); return false; }
+  if(rate <= 0){ $('rate').classList.add('error'); alert('Please enter Rate.'); return false; }
+
+  return true;
+}
+
+function generatePDF(preview=false){
+  if(!validateAll()) return;
+  const root = document.getElementById('invoice-root');
+  const opt = {
+    margin: 10,
+    filename: ($('invNo').value || 'invoice') + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  if(preview){
+    html2pdf().set(opt).from(root).toPdf().outputPdf('datauristring').then(uri=>{
+      const w=window.open('about:blank');
+      if(w) w.location.href=uri;
+      else alert('Popup blocked — allow popups to preview PDF.');
+    });
+  } else {
+    html2pdf().set(opt).from(root).save();
+  }
+}
+
+document.getElementById('downloadPdf').addEventListener('click', ()=>generatePDF(false));
+document.getElementById('previewPdf').addEventListener('click', ()=>generatePDF(true));
+
+window.addEventListener('load', clearInputsOnLoad);
+</script>
+</body>
+</html>
