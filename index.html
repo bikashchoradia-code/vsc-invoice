@@ -3,8 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VSC.Invoice — Proforma (Blank Launch)</title>
+  <title>VSC.Invoice — Proforma</title>
   <meta name="theme-color" content="#2563eb">
+
+  <!-- PWA icon + manifest -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
   <style>
     body { font-family: Arial, sans-serif; padding: 18px; color: #111; background:#f7f8fb }
     .container { max-width:900px; margin:0 auto; background: #fff; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06) }
@@ -16,14 +22,15 @@
     .meta { margin-top: 6px; font-size:14px }
     .row { display:flex; justify-content:space-between; gap:12px; margin-top:8px; align-items:flex-start }
     .table { width:100%; border-collapse: collapse; margin-top:12px }
-    .table th, .table td { border:1px solid #ccc; padding:8px }
+    .table th, .table td { border:1px solid #ccc; padding:8px; vertical-align:top; word-wrap:break-word }
     .right { text-align:right }
+    .centerCell { text-align:center }
     .small { font-size: 12px }
     .bank-details { margin-top:14px; border-top:1px dashed #ddd; padding-top:8px; font-size:13px }
     .no-print { display:block }
     .btn { display:inline-block; padding:8px 12px; border-radius:6px; background:#2563eb; color:#fff; text-decoration:none; margin-right:8px }
-    input, textarea { padding:6px; border:1px solid #ccc; border-radius:4px }
-    textarea { resize:vertical }
+    input, textarea { padding:6px; border:1px solid #ccc; border-radius:4px; font-family:inherit; font-size:14px; box-sizing:border-box }
+    textarea { resize:vertical; min-height:60px; width:100%; }
     .footer { margin-top:18px }
     .auth { font-size:12px; margin-top:28px; text-align:right }
     label.req::after { content: ' *'; color: red }
@@ -44,12 +51,25 @@
     <div class="row" style="margin-top:14px">
       <div style="flex:1; min-width:260px">
         <div style="margin-bottom:6px"><strong>Party:</strong> <span id="partyName">Central Bank of India</span></div>
-        <div style="margin-bottom:6px"><label class="req">Branch</label><br><input id="branch" placeholder="Enter branch" style="width:100%"></div>
+        <div style="margin-bottom:6px">
+          <label class="req">Branch</label><br>
+          <input id="branch" placeholder="Enter branch" style="width:100%">
+        </div>
         <div style="margin-bottom:6px"><strong>Nature of Service:</strong> Due Diligence Report</div>
       </div>
       <div style="width:320px">
-        <div style="margin-bottom:8px"><label class="req">Invoice No</label><br><input id="invNo" value="VSC/2526/" style="width:100%"></div>
-        <div style="margin-bottom:8px"><label class="req">Date</label><br><input id="invDate" type="date" style="width:100%"></div>
+        <div style="margin-bottom:8px">
+          <label class="req">Invoice No</label><br>
+          <input id="invNo" value="VSC/2526/" style="width:100%">
+        </div>
+
+        <!-- Date with hidden real date input + visible DD/MM/YYYY field -->
+        <div style="margin-bottom:8px; position:relative">
+          <label class="req">Date</label><br>
+          <input id="invDateDisplay" type="text" placeholder="DD/MM/YYYY" style="width:100%">
+          <input id="invDate" type="date"
+                 style="width:0;height:0;border:0;padding:0;margin:0;opacity:0;position:absolute;left:-9999px;pointer-events:none;">
+        </div>
       </div>
     </div>
 
@@ -57,20 +77,22 @@
       <thead>
         <tr>
           <th>Description</th>
-          <th style="width:120px">HSN / SAC</th>
-          <th style=\"width:120px\">HSN / SAC</th>
-          <th style="width:120px">Rate</th>
-          <th style="width:80px">Total GST %</th>
-          <th style="width:120px">Amount</th>
+          <th style="width:140px">HSN / SAC</th>
+          <th style="width:120px">Rate (₹)</th>
+          <th style="width:120px">Total GST %</th>
+          <th style="width:140px">Amount (₹)</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>Due Diligence Report — <br><label class="req">Narration</label><br><input id="narration" placeholder="Narration / details" style="width:98%"></td>
-          <td class="center">998214</td>
-          <td class=\"center\">998214</td>
+          <td>
+            Due Diligence Report — 
+            <br><label class="req">Narration</label><br>
+            <textarea id="narration" placeholder="Narration / details (full text will wrap)"></textarea>
+          </td>
+          <td class="centerCell">998214</td>
           <td><input id="rate" type="number" value="0" step="0.01" style="width:100%"></td>
-          <td><input id="tax" type="number" value="18" step="0.01" style="width:100%"></td>
+          <td class="centerCell">18%</td>
           <td id="amount" class="right">0.00</td>
         </tr>
       </tbody>
@@ -104,91 +126,132 @@
       <a class="btn" id="previewPdf" style="background:#0b74de">Preview PDF</a>
       <div style="margin-left:auto; color:#666; font-size:13px">App name: <strong>VSC.Invoice</strong></div>
     </div>
-
   </div>
 
-<!-- html2pdf library (CDN) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <!-- html2pdf library (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
-<script>
-function formatNumber(n){ return Number(n||0).toFixed(2); }
-function $(id){return document.getElementById(id)}
+  <script>
+    const TAX_RATE = 18; // fixed
 
-// Launch blank
-function clearInputsOnLoad(){
-  $('branch').value = '';
-  $('invNo').value = 'VSC/2526/';
-  $('invDate').value = new Date().toISOString().slice(0,10);
-  $('narration').value = '';
-  $('rate').value = '';
-  $('tax').value = 18;
-  calc();
-}
+    function formatNumber(n){ return Number(n||0).toFixed(2); }
+    function $(id){return document.getElementById(id)}
 
-// NEW calculation (since no QTY)
-// Taxable Value = Rate
-// GST = Rate * (tax%)
-// Total = Rate + GST
-function calc(){
-  const r = parseFloat($('rate').value)||0;
-  const t = parseFloat($('tax').value)||0;
-  const taxable = r;
-  const taxAmt = taxable * (t/100);
+    // Convert JS Date → DD/MM/YYYY
+    function toDDMMYYYY(date){
+      const d = date.getDate().toString().padStart(2,'0');
+      const m = (date.getMonth()+1).toString().padStart(2,'0');
+      const y = date.getFullYear();
+      return d + '/' + m + '/' + y;
+    }
 
-  $('taxable').textContent = formatNumber(taxable);
-  $('totalgst').textContent = formatNumber(taxAmt);
-  $('amount').textContent = formatNumber(taxable + taxAmt);
-  $('total').textContent = formatNumber(taxable + taxAmt);
-}
+    // Convert YYYY-MM-DD string → DD/MM/YYYY
+    function formatDateString(ymd){
+      if(!ymd) return '';
+      const [y,m,d] = ymd.split('-');
+      if(!y || !m || !d) return '';
+      return d.padStart(2,'0') + '/' + m.padStart(2,'0') + '/' + y;
+    }
 
-['rate','tax'].forEach(id=>{document.getElementById(id).addEventListener('input', calc)});
+    // Launch with blank inputs
+    function clearInputsOnLoad(){
+      $('branch').value = '';
+      $('invNo').value = 'VSC/2526/';
+      const today = new Date();
+      const ymd = today.toISOString().slice(0,10); // yyyy-mm-dd
+      $('invDate').value = ymd;
+      $('invDateDisplay').value = toDDMMYYYY(today);
+      $('narration').value = '';
+      $('rate').value = '';
+      calc();
+    }
 
-// Validation (removed qty logic)
-function validateAll(){
-  ['branch','invNo','invDate','narration','rate'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('error'); });
+    // Date picker bridge: text → hidden date input
+    function setupDatePicker(){
+      const display = $('invDateDisplay');
+      const hidden = $('invDate');
 
-  const branch = $('branch').value.trim();
-  const invNo = $('invNo').value.trim();
-  const invDate = $('invDate').value;
-  const narration = $('narration').value.trim();
-  const rate = parseFloat($('rate').value) || 0;
+      display.addEventListener('focus', () => {
+        if (hidden.showPicker) {
+          hidden.showPicker();
+        } else {
+          hidden.click();
+        }
+      });
 
-  if(!branch){ $('branch').classList.add('error'); alert('Please enter Branch.'); return false; }
-  const prefix = 'VSC/2526/';
-  if(!invNo || !invNo.startsWith(prefix) || invNo.length <= prefix.length){ $('invNo').classList.add('error'); alert('Invoice number must be like VSC/2526/0001'); return false; }
-  if(!invDate){ $('invDate').classList.add('error'); alert('Please select Date.'); return false; }
-  if(!narration){ $('narration').classList.add('error'); alert('Please enter Narration.'); return false; }
-  if(rate <= 0){ $('rate').classList.add('error'); alert('Please enter Rate.'); return false; }
+      hidden.addEventListener('change', () => {
+        display.value = formatDateString(hidden.value);
+      });
+    }
 
-  return true;
-}
+    // Calculation logic: Taxable Value = Rate; GST = Rate * 18%; Total = Rate + GST
+    function calc(){
+      const r = parseFloat($('rate').value)||0;
+      const taxable = r;
+      const taxAmt = taxable * (TAX_RATE/100);
 
-function generatePDF(preview=false){
-  if(!validateAll()) return;
-  const root = document.getElementById('invoice-root');
-  const opt = {
-    margin: 10,
-    filename: ($('invNo').value || 'invoice') + '.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+      $('taxable').textContent = formatNumber(taxable);
+      $('totalgst').textContent = formatNumber(taxAmt);
+      $('amount').textContent = formatNumber(taxable + taxAmt);
+      $('total').textContent = formatNumber(taxable + taxAmt);
+    }
 
-  if(preview){
-    html2pdf().set(opt).from(root).toPdf().outputPdf('datauristring').then(uri=>{
-      const w=window.open('about:blank');
-      if(w) w.location.href=uri;
-      else alert('Popup blocked — allow popups to preview PDF.');
+    ['rate'].forEach(id=>{$(id).addEventListener('input', calc)});
+
+    function validateAll(){
+      ['branch','invNo','narration','rate','invDateDisplay'].forEach(id=>{
+        const el=$(id); if(el) el.classList.remove('error');
+      });
+
+      const branch = $('branch').value.trim();
+      const invNo = $('invNo').value.trim();
+      const invDateText = $('invDateDisplay').value.trim();
+      const narration = $('narration').value.trim();
+      const rate = parseFloat($('rate').value) || 0;
+
+      if(!branch){ $('branch').classList.add('error'); alert('Please enter Branch.'); return false; }
+      const prefix = 'VSC/2526/';
+      if(!invNo || !invNo.startsWith(prefix) || invNo.length <= prefix.length){
+        $('invNo').classList.add('error');
+        alert('Invoice number must be like VSC/2526/0001');
+        return false;
+      }
+      if(!invDateText){ $('invDateDisplay').classList.add('error'); alert('Please enter Date in DD/MM/YYYY.'); return false; }
+      if(!narration){ $('narration').classList.add('error'); alert('Please enter Narration.'); return false; }
+      if(rate <= 0){ $('rate').classList.add('error'); alert('Please enter Rate.'); return false; }
+
+      return true;
+    }
+
+    function generatePDF(preview=false){
+      if(!validateAll()) return;
+      const root = document.getElementById('invoice-root');
+      const opt = {
+        margin: 10,
+        filename: ($('invNo').value || 'invoice') + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      if(preview){
+        html2pdf().set(opt).from(root).toPdf().outputPdf('datauristring').then(uri=>{
+          const w=window.open('about:blank');
+          if(w) w.location.href=uri;
+          else alert('Popup blocked — allow popups to preview PDF.');
+        });
+      } else {
+        html2pdf().set(opt).from(root).save();
+      }
+    }
+
+    document.getElementById('downloadPdf').addEventListener('click', ()=>generatePDF(false));
+    document.getElementById('previewPdf').addEventListener('click', ()=>generatePDF(true));
+
+    window.addEventListener('load', () => {
+      clearInputsOnLoad();
+      setupDatePicker();
     });
-  } else {
-    html2pdf().set(opt).from(root).save();
-  }
-}
-
-document.getElementById('downloadPdf').addEventListener('click', ()=>generatePDF(false));
-document.getElementById('previewPdf').addEventListener('click', ()=>generatePDF(true));
-
-window.addEventListener('load', clearInputsOnLoad);
-</script>
+  </script>
 </body>
 </html>
