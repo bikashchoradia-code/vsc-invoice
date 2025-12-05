@@ -22,7 +22,7 @@
     .meta { margin-top: 6px; font-size:14px }
     .row { display:flex; justify-content:space-between; gap:12px; margin-top:8px; align-items:flex-start }
     .table { width:100%; border-collapse: collapse; margin-top:12px }
-    .table th, .table td { border:1px solid #ccc; padding:8px; vertical-align:top; word-wrap:break-word }
+    .table th, .table td { border:1px solid #ccc; padding:8px; vertical-align:top; word-break:break-word }
     .right { text-align:right }
     .centerCell { text-align:center }
     .small { font-size: 12px }
@@ -30,7 +30,7 @@
     .no-print { display:block }
     .btn { display:inline-block; padding:8px 12px; border-radius:6px; background:#2563eb; color:#fff; text-decoration:none; margin-right:8px }
     input, textarea { padding:6px; border:1px solid #ccc; border-radius:4px; font-family:inherit; font-size:14px; box-sizing:border-box }
-    textarea { resize:vertical; min-height:60px; width:100%; }
+    textarea { resize:none; min-height:48px; width:100%; overflow:hidden; } /* auto-resize */
     .footer { margin-top:18px }
     .auth { font-size:12px; margin-top:28px; text-align:right }
     label.req::after { content: ' *'; color: red }
@@ -50,13 +50,21 @@
 
     <div class="row" style="margin-top:14px">
       <div style="flex:1; min-width:260px">
-        <div style="margin-bottom:6px"><strong>Party:</strong> <span id="partyName">Central Bank of India</span></div>
+        <div style="margin-bottom:6px">
+          <strong>Party:</strong> <span id="partyName">Central Bank of India</span>
+        </div>
+
         <div style="margin-bottom:6px">
           <label class="req">Branch</label><br>
-          <input id="branch" placeholder="Enter branch" style="width:100%">
+          <!-- branch text bold -->
+          <input id="branch" placeholder="Enter branch" style="width:100%; font-weight:bold;">
         </div>
-        <div style="margin-bottom:6px"><strong>Nature of Service:</strong> Due Diligence Report</div>
+
+        <div style="margin-bottom:6px">
+          <strong>Nature of Service:</strong> Due Diligence Report
+        </div>
       </div>
+
       <div style="width:320px">
         <div style="margin-bottom:8px">
           <label class="req">Invoice No</label><br>
@@ -76,19 +84,21 @@
     <table class="table" id="itemsTbl">
       <thead>
         <tr>
-          <th>Description</th>
-          <th style="width:140px">HSN / SAC</th>
-          <th style="width:120px">Rate (₹)</th>
-          <th style="width:120px">Total GST %</th>
-          <th style="width:140px">Amount (₹)</th>
+          <th style="width:55%">Description</th>
+          <th style="width:80px">HSN / SAC</th>
+          <th style="width:90px">Rate (₹)</th>
+          <th style="width:80px">Total GST %</th>
+          <th style="width:100px">Amount (₹)</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>
-            Due Diligence Report — 
-            <br><label class="req">Narration</label><br>
-            <textarea id="narration" placeholder="Narration / details (full text will wrap)"></textarea>
+            <div><strong>Due Diligence Report –</strong></div>
+            <!-- narration directly, bold -->
+            <textarea id="narration"
+                      style="font-weight:bold; margin-top:4px;"
+                      placeholder="Party / narration details (40–80 words also visible)"></textarea>
           </td>
           <td class="centerCell">998214</td>
           <td><input id="rate" type="number" value="0" step="0.01" style="width:100%"></td>
@@ -148,9 +158,17 @@
     // Convert YYYY-MM-DD string → DD/MM/YYYY
     function formatDateString(ymd){
       if(!ymd) return '';
-      const [y,m,d] = ymd.split('-');
-      if(!y || !m || !d) return '';
+      const parts = ymd.split('-');
+      if(parts.length !== 3) return '';
+      const [y,m,d] = parts;
       return d.padStart(2,'0') + '/' + m.padStart(2,'0') + '/' + y;
+    }
+
+    // Auto-resize textarea to fit content
+    function autoResizeTextarea(el){
+      if(!el) return;
+      el.style.height = 'auto';
+      el.style.height = (el.scrollHeight) + 'px';
     }
 
     // Launch with blank inputs
@@ -163,6 +181,7 @@
       $('invDateDisplay').value = toDDMMYYYY(today);
       $('narration').value = '';
       $('rate').value = '';
+      autoResizeTextarea($('narration'));
       calc();
     }
 
@@ -196,7 +215,12 @@
       $('total').textContent = formatNumber(taxable + taxAmt);
     }
 
-    ['rate'].forEach(id=>{$(id).addEventListener('input', calc)});
+    $('rate').addEventListener('input', calc);
+
+    // Auto-resize narration as user types
+    $('narration').addEventListener('input', function(){
+      autoResizeTextarea(this);
+    });
 
     function validateAll(){
       ['branch','invNo','narration','rate','invDateDisplay'].forEach(id=>{
