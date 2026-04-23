@@ -1,105 +1,114 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VSC.Invoice</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VSC.Invoice — Proforma</title>
+  <meta name="theme-color" content="#2563eb">
 
-<style>
-body { font-family: Arial; background:#f7f8fb; padding:20px }
-.container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:8px }
-.center { text-align:center }
-.title { font-weight:bold; font-size:20px }
-.firm { font-weight:bold; color:#0b3d91; font-size:22px }
-.sub { color:#0b3d91 }
-.table { width:100%; border-collapse:collapse; margin-top:12px }
-.table th, .table td { border:1px solid #ccc; padding:8px; vertical-align:top }
-textarea { width:100%; resize:none; font-weight:bold; overflow:hidden }
-input { width:100%; padding:6px }
-.btn { padding:10px 15px; background:#2563eb; color:white; border-radius:6px; text-decoration:none; cursor:pointer }
-.no-print {}
-</style>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <style>
+    body { font-family: Arial, sans-serif; padding: 18px; color: #111; background:#f7f8fb }
+    .container { max-width:900px; margin:0 auto; background: #fff; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06) }
+    .center { text-align:center }
+    .title { font-weight:700; color:#000; font-size:20px; margin-bottom:6px }
+    .firm { font-weight:700; color:#0b3d91; margin:0 }
+    .firm.big { font-size:22px }
+    .sub { color:#0b3d91; margin:4px 0 8px 0 }
+    .meta { margin-top: 6px; font-size:14px }
+    .row { display:flex; justify-content:space-between; gap:12px; margin-top:8px; align-items:flex-start }
+    .table { width:100%; border-collapse: collapse; margin-top:12px }
+    .table th, .table td { border:1px solid #ccc; padding:8px; vertical-align:top; word-break:break-word }
+    .right { text-align:right }
+    .centerCell { text-align:center }
+    .small { font-size: 12px }
+    .bank-details { margin-top:14px; border-top:1px dashed #ddd; padding-top:8px; font-size:13px }
+    .no-print { display:block }
+    .btn { display:inline-block; padding:8px 12px; border-radius:6px; background:#2563eb; color:#fff; text-decoration:none; margin-right:8px }
+    input, textarea { padding:6px; border:1px solid #ccc; border-radius:4px; font-family:inherit; font-size:14px; box-sizing:border-box }
+    textarea { resize:none; min-height:48px; width:100%; overflow:hidden; }
+    .footer { margin-top:18px }
+    .auth { font-size:12px; margin-top:28px; text-align:right }
+    label.req::after { content: ' *'; color: red }
+    .error { border-color: red }
+    @media print { .no-print { display:none } }
+  </style>
 </head>
 
 <body>
 <div class="container" id="invoice-root">
 
 <div class="center">
-<div class="title">PROFORMA INVOICE</div>
-<div class="firm">VINOD SINGHAL & CO. LLP</div>
-<div class="sub">CHARTERED ACCOUNTANTS</div>
-<div>GSTIN: 18AADFV8895M1Z3</div>
-<div>Phone: 7002609752</div>
+  <div class="title">PROFORMA INVOICE</div>
+  <div class="firm big">VINOD SINGHAL &amp; CO. LLP</div>
+  <div class="sub">CHARTERED ACCOUNTANTS</div>
+  <div class="meta">GSTIN: 18AADFV8895M1Z3</div>
+  <div class="meta">Phone: 7002609752</div>
 </div>
 
-<br>
+<div class="row" style="margin-top:14px">
+  <div style="flex:1; min-width:260px">
 
-<div>
-<b>Party:</b> Central Bank of India
-</div>
+    <div><strong>Party:</strong> Central Bank of India</div>
 
-<div>
-<b>Branch</b><br>
-<input id="branch" style="font-weight:bold;">
-</div>
+    <div>
+      <label class="req">Branch</label><br>
+      <input id="branch" style="font-weight:bold;">
+    </div>
 
-<br>
+    <div><strong>Nature of Service:</strong> Due Diligence Report</div>
 
-<div>
-<b>Nature of Service:</b> Due Diligence Report
-</div>
+  </div>
 
-<br>
+  <div style="width:320px">
 
-<div>
-<b>Invoice No</b><br>
-<input id="invNo" value="VSC/2627/">
-</div>
+    <div>
+      <label class="req">Invoice No</label><br>
+      <input id="invNo" value="VSC/2627/">
+    </div>
 
-<div>
-<b>Date</b><br>
-<input id="date">
+    <div style="position:relative">
+      <label class="req">Date</label><br>
+      <input id="invDateDisplay" placeholder="DD/MM/YYYY">
+      <input id="invDate" type="date"
+             style="position:absolute;left:-9999px;">
+    </div>
+
+  </div>
 </div>
 
 <table class="table">
 <tr>
-<th style="width:55%">Description</th>
-<th>HSN</th>
-<th>Rate</th>
-<th>GST</th>
-<th>Amount</th>
+  <th style="width:55%">Description</th>
+  <th>HSN</th>
+  <th>Rate</th>
+  <th>GST</th>
+  <th>Amount</th>
 </tr>
 
 <tr>
 <td>
-<b>Due Diligence Report -</b>
-<textarea id="narration"></textarea>
+  <strong>Due Diligence Report –</strong>
+  <textarea id="narration" style="font-weight:bold;"></textarea>
 </td>
 
 <td>998214</td>
-
-<td>
-<input id="rate">
-</td>
-
+<td><input id="rate"></td>
 <td>18%</td>
-
-<td id="amount">0</td>
+<td id="amount">0.00</td>
 </tr>
 </table>
 
-<br>
-
 <div style="text-align:right">
-Taxable Value: <span id="taxable">0</span><br>
-GST: <span id="gst">0</span><br>
-<b>Total: <span id="total">0</span></b>
+Taxable Value: <span id="taxable">0.00</span><br>
+GST: <span id="totalgst">0.00</span><br>
+<b>Total: <span id="total">0.00</span></b>
 </div>
 
-<br>
-
-<div>
-<b>Bank Particulars</b><br>
+<div class="bank-details">
 Account Name: BIKASH CHORADIA<br>
 Bank: CENTRAL BANK OF INDIA<br>
 A/c No: 5274142844<br>
@@ -107,9 +116,7 @@ Branch: BASISHTA CHARIALI<br>
 IFSC: CBIN0284212
 </div>
 
-<br>
-
-<div class="no-print">
+<div class="no-print" style="margin-top:10px">
 <button class="btn" onclick="downloadPDF()">Download PDF</button>
 <button class="btn" onclick="previewPDF()">Preview PDF</button>
 </div>
@@ -119,51 +126,57 @@ IFSC: CBIN0284212
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
 <script>
+const TAX_RATE = 18;
+
+function $(id){ return document.getElementById(id); }
+
 function calc(){
-let r = parseFloat(document.getElementById('rate').value)||0;
-let gst = r*0.18;
-document.getElementById('taxable').innerText = r.toFixed(2);
-document.getElementById('gst').innerText = gst.toFixed(2);
-document.getElementById('total').innerText = (r+gst).toFixed(2);
-document.getElementById('amount').innerText = (r+gst).toFixed(2);
+  let r = parseFloat($('rate').value)||0;
+  let gst = r * 0.18;
+  $('taxable').innerText = r.toFixed(2);
+  $('totalgst').innerText = gst.toFixed(2);
+  $('total').innerText = (r+gst).toFixed(2);
+  $('amount').innerText = (r+gst).toFixed(2);
 }
-document.getElementById('rate').addEventListener('input',calc);
+
+$('rate').addEventListener('input', calc);
 
 function autoResize(el){
-el.style.height='auto';
-el.style.height=el.scrollHeight+'px';
+  el.style.height='auto';
+  el.style.height=el.scrollHeight+'px';
 }
-document.getElementById('narration').addEventListener('input',function(){
-autoResize(this);
+
+$('narration').addEventListener('input', function(){
+  autoResize(this);
 });
 
 function generate(preview){
-let buttons = document.querySelector('.no-print');
-buttons.style.display='none'; // hide
+  let buttons = document.querySelector('.no-print');
+  buttons.style.display='none'; // hide buttons
 
-let element = document.getElementById('invoice-root');
+  let element = document.getElementById('invoice-root');
 
-let opt = {
-margin:10,
-filename:'invoice.pdf',
-html2canvas:{scale:2},
-jsPDF:{unit:'mm',format:'a4'}
-};
+  let opt = {
+    margin:10,
+    filename:'invoice.pdf',
+    html2canvas:{scale:2},
+    jsPDF:{unit:'mm',format:'a4'}
+  };
 
-if(preview){
-html2pdf().set(opt).from(element).toPdf().outputPdf('datauristring').then(uri=>{
-window.open(uri);
-buttons.style.display='block';
-});
-}else{
-html2pdf().set(opt).from(element).save().then(()=>{
-buttons.style.display='block';
-});
+  if(preview){
+    html2pdf().set(opt).from(element).toPdf().outputPdf('datauristring').then(uri=>{
+      window.open(uri);
+      buttons.style.display='block'; // show back
+    });
+  } else {
+    html2pdf().set(opt).from(element).save().then(()=>{
+      buttons.style.display='block'; // show back
+    });
+  }
 }
-}
 
-function downloadPDF(){generate(false)}
-function previewPDF(){generate(true)}
+function downloadPDF(){ generate(false); }
+function previewPDF(){ generate(true); }
 </script>
 
 </body>
