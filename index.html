@@ -74,7 +74,6 @@ input { width:100%; padding:6px; box-sizing:border-box }
 </tr>
 
 <tr>
-
 <td>
 <b>Due Diligence Report –</b>
 <textarea id="narration"></textarea>
@@ -82,9 +81,7 @@ input { width:100%; padding:6px; box-sizing:border-box }
 
 <td>998214</td>
 
-<td>
-<input id="taxableInput">
-</td>
+<td><input id="taxableInput"></td>
 
 <td id="gstAmt">0.00</td>
 
@@ -141,7 +138,7 @@ grandTotal.innerText = total.toFixed(2);
 
 taxableInput.addEventListener("input", calc);
 
-// ===== TEXTAREA AUTO RESIZE =====
+// ===== AUTO RESIZE =====
 narration.addEventListener("input", function(){
 this.style.height="auto";
 this.style.height=this.scrollHeight+"px";
@@ -175,6 +172,11 @@ return false;
 return valid;
 }
 
+// ===== CLEAN FILE NAME =====
+function cleanFileName(name){
+return name.replace(/[\\\/:*?"<>|]/g, '').trim();
+}
+
 // ===== PDF =====
 function generate(preview){
 
@@ -185,9 +187,15 @@ btn.style.display="none";
 
 let element = document.getElementById('invoice-root');
 
+// ===== DYNAMIC FILE NAME =====
+let inv = invNo.value.split('/').pop().trim();
+let narrationText = narration.value.trim();
+
+let fileName = cleanFileName(`Bill No. ${inv} ${narrationText || 'Invoice'}.pdf`);
+
 let opt = {
 margin:10,
-filename:"invoice.pdf",
+filename:fileName,
 html2canvas:{scale:2},
 jsPDF:{unit:"mm",format:"a4"}
 };
