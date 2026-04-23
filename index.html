@@ -141,10 +141,25 @@ grandTotal.innerText = total.toFixed(2);
 
 taxableInput.addEventListener("input", calc);
 
-// ===== TEXTAREA AUTO RESIZE =====
+// ===== TEXTAREA AUTO RESIZE (FIXED) =====
+function autoResizeTextarea(el){
+el.style.height = "auto";
+el.style.height = el.scrollHeight + "px";
+}
+
+// typing
 narration.addEventListener("input", function(){
-this.style.height="auto";
-this.style.height=this.scrollHeight+"px";
+autoResizeTextarea(this);
+});
+
+// paste
+narration.addEventListener("paste", function(){
+setTimeout(() => autoResizeTextarea(this), 0);
+});
+
+// load
+window.addEventListener("load", function(){
+autoResizeTextarea(narration);
 });
 
 // ===== DATE PICKER =====
