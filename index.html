@@ -8,6 +8,7 @@
 <style>
 body { font-family: Arial; background:#f7f8fb; padding:20px }
 .container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:8px }
+
 .center { text-align:center }
 .title { font-weight:bold; font-size:20px }
 .firm { font-weight:bold; color:#0b3d91; font-size:22px }
@@ -17,12 +18,12 @@ body { font-family: Arial; background:#f7f8fb; padding:20px }
 .table th, .table td { border:1px solid #ccc; padding:8px; vertical-align:top }
 
 textarea { width:100%; resize:none; font-weight:bold; overflow:hidden }
-input { width:100%; padding:6px }
+input { width:100%; padding:6px; box-sizing:border-box }
 
-.btn { padding:10px 15px; background:#2563eb; color:white; border-radius:6px; border:none }
+.btn { padding:10px 15px; background:#2563eb; color:white; border:none; border-radius:6px }
 
-.no-print { margin-top:10px }
 .error { border:2px solid red }
+.no-print { margin-top:10px }
 </style>
 </head>
 
@@ -68,8 +69,8 @@ input { width:100%; padding:6px }
 <th style="width:55%">Description</th>
 <th style="width:80px">HSN</th>
 <th style="width:90px">Rate</th>
-<th style="width:70px">GST</th>
-<th style="width:100px">Amount</th>
+<th style="width:90px">GST</th>
+<th style="width:110px">Amount</th>
 </tr>
 
 <tr>
@@ -80,11 +81,18 @@ input { width:100%; padding:6px }
 
 <td>998214</td>
 
-<td><input id="rate"></td>
+<td>
+<input id="rate">
+</td>
 
-<td>18%</td>
+<td id="gstBox">
+18%
+<br>
+<span id="gstAmt">0.00</span>
+</td>
 
 <td id="amount">0.00</td>
+
 </tr>
 
 </table>
@@ -93,7 +101,7 @@ input { width:100%; padding:6px }
 
 <div style="text-align:right">
 Taxable Value: <span id="taxable">0.00</span><br>
-GST: <span id="gst">0.00</span><br>
+GST: <span id="gstTotal">0.00</span><br>
 <b>Total: <span id="total">0.00</span></b>
 </div>
 
@@ -126,7 +134,8 @@ let r = parseFloat(rate.value)||0;
 let gst = r*0.18;
 
 taxable.innerText = r.toFixed(2);
-gstSpan.innerText = gst.toFixed(2);
+gstAmt.innerText = gst.toFixed(2);
+gstTotal.innerText = gst.toFixed(2);
 total.innerText = (r+gst).toFixed(2);
 amount.innerText = (r+gst).toFixed(2);
 }
@@ -165,7 +174,7 @@ valid=false;
 });
 
 if(!invNo.value.startsWith("VSC/2627/")){
-alert("Invoice should start with VSC/2627/");
+alert("Invoice must start with VSC/2627/");
 return false;
 }
 
@@ -180,6 +189,8 @@ if(!validate()) return;
 let btn = document.querySelector(".no-print");
 btn.style.display="none";
 
+let element = document.getElementById('invoice-root');
+
 let opt = {
 margin:10,
 filename:"invoice.pdf",
@@ -188,12 +199,12 @@ jsPDF:{unit:"mm",format:"a4"}
 };
 
 if(preview){
-html2pdf().set(opt).from(invoice-root).toPdf().outputPdf('datauristring').then(uri=>{
+html2pdf().set(opt).from(element).toPdf().outputPdf('datauristring').then(uri=>{
 window.open(uri);
 btn.style.display="block";
 });
 }else{
-html2pdf().set(opt).from(invoice-root).save().then(()=>{
+html2pdf().set(opt).from(element).save().then(()=>{
 btn.style.display="block";
 });
 }
