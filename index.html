@@ -1,5 +1,18 @@
 <script>
 
+// ===== GET ELEMENTS SAFELY =====
+const taxableInput = document.getElementById("taxableInput");
+const gstAmt = document.getElementById("gstAmt");
+const invoiceAmt = document.getElementById("invoiceAmt");
+const taxableTotal = document.getElementById("taxableTotal");
+const gstTotal = document.getElementById("gstTotal");
+const grandTotal = document.getElementById("grandTotal");
+const narration = document.getElementById("narration");
+const branch = document.getElementById("branch");
+const invNo = document.getElementById("invNo");
+const dateDisplay = document.getElementById("dateDisplay");
+const date = document.getElementById("date");
+
 // ===== CALCULATION =====
 function calc(){
 let val = parseFloat(taxableInput.value)||0;
@@ -16,20 +29,16 @@ grandTotal.innerText = total.toFixed(2);
 
 taxableInput.addEventListener("input", calc);
 
-// ===== AUTO RESIZE TEXTAREA =====
-function autoResize(el){
-el.style.height = "auto";
-el.style.height = el.scrollHeight + "px";
+// ===== AUTO RESIZE =====
+function autoResize(){
+narration.style.height = "auto";
+narration.style.height = narration.scrollHeight + "px";
 }
 
-// trigger on typing + paste + load
-["input","paste"].forEach(evt=>{
-narration.addEventListener(evt, ()=>autoResize(narration));
-});
+narration.addEventListener("input", autoResize);
+narration.addEventListener("paste", autoResize);
 
-window.addEventListener("load", ()=>{
-autoResize(narration);
-});
+window.addEventListener("load", autoResize);
 
 // ===== DATE PICKER =====
 dateDisplay.addEventListener("focus", ()=>date.showPicker());
@@ -64,7 +73,7 @@ function cleanFileName(name){
 return name.replace(/[\\\/:*?"<>|]/g, '').trim();
 }
 
-// ===== PDF GENERATION =====
+// ===== PDF =====
 function generate(preview){
 
 if(!validate()) return;
@@ -87,24 +96,18 @@ jsPDF:{unit:"mm",format:"a4"}
 };
 
 if(preview){
-
 html2pdf().set(opt).from(element).toPdf().output('datauristring').then(uri=>{
 window.open(uri);
 btn.style.display="block";
 });
-
-} else {
-
-// ✅ RELIABLE DOWNLOAD METHOD
+}else{
 html2pdf().set(opt).from(element).toPdf().output('blob').then(blob=>{
 let link = document.createElement('a');
 link.href = URL.createObjectURL(blob);
 link.download = fileName;
 link.click();
-
 btn.style.display="block";
 });
-
 }
 }
 
