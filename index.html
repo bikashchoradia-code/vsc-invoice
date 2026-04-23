@@ -1,21 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VSC.Invoice</title>
+
+<style>
+body { font-family: Arial; background:#f7f8fb; padding:20px }
+.container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:8px }
+
+.center { text-align:center }
+.title { font-weight:bold; font-size:20px }
+.firm { font-weight:bold; color:#0b3d91; font-size:22px }
+.sub { color:#0b3d91 }
+
+.table { width:100%; border-collapse:collapse; margin-top:12px; table-layout:fixed }
+.table th, .table td { border:1px solid #ccc; padding:8px; vertical-align:top }
+
+textarea { width:100%; resize:none; font-weight:bold; overflow:hidden }
+input { width:100%; padding:6px; box-sizing:border-box }
+
+.btn { padding:10px 15px; background:#2563eb; color:white; border:none; border-radius:6px }
+
+.error { border:2px solid red }
+.no-print { margin-top:10px }
+</style>
+</head>
+
+<body>
+
+<div class="container" id="invoice-root">
+
+<div class="center">
+<div class="title">PROFORMA INVOICE</div>
+<div class="firm">VINOD SINGHAL & CO. LLP</div>
+<div class="sub">CHARTERED ACCOUNTANTS</div>
+<div>GSTIN: 18AADFV8895M1Z3</div>
+<div>Phone: 7002609752</div>
+</div>
+
+<br>
+
+<b>Party:</b> Central Bank of India
+
+<br><br>
+
+<label>Branch *</label>
+<input id="branch" style="font-weight:bold;">
+
+<br><br>
+
+<b>Nature of Service:</b> Due Diligence Report
+
+<br><br>
+
+<label>Invoice No *</label>
+<input id="invNo" value="VSC/2627/">
+
+<br><br>
+
+<label>Date *</label>
+<input id="dateDisplay" placeholder="DD/MM/YYYY">
+<input id="date" type="date" style="display:none">
+
+<table class="table">
+
+<tr>
+<th style="width:55%">Description</th>
+<th style="width:80px">HSN</th>
+<th style="width:110px">Taxable Value</th>
+<th style="width:110px">GST 18%</th>
+<th style="width:120px">Invoice Value</th>
+</tr>
+
+<tr>
+
+<td>
+<b>Due Diligence Report –</b>
+<textarea id="narration"></textarea>
+</td>
+
+<td>998214</td>
+
+<td>
+<input id="taxableInput">
+</td>
+
+<td id="gstAmt">0.00</td>
+
+<td id="invoiceAmt">0.00</td>
+
+</tr>
+
+</table>
+
+<br>
+
+<div style="text-align:right">
+Taxable Value: <span id="taxableTotal">0.00</span><br>
+GST: <span id="gstTotal">0.00</span><br>
+<b>Total: <span id="grandTotal">0.00</span></b>
+</div>
+
+<br>
+
+<div>
+<b>Bank Details</b><br>
+Account Name: BIKASH CHORADIA<br>
+Bank: CENTRAL BANK OF INDIA<br>
+A/c No: 5274142844<br>
+Branch: BASISHTA CHARIALI<br>
+IFSC: CBIN0284212
+</div>
+
+<div class="no-print">
+<br>
+<button class="btn" onclick="downloadPDF()">Download PDF</button>
+<button class="btn" onclick="previewPDF()">Preview PDF</button>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
 <script>
 
-document.addEventListener("DOMContentLoaded", function() {
-
-// ===== GET ELEMENTS =====
-const taxableInput = document.getElementById("taxableInput");
-const gstAmt = document.getElementById("gstAmt");
-const invoiceAmt = document.getElementById("invoiceAmt");
-const taxableTotal = document.getElementById("taxableTotal");
-const gstTotal = document.getElementById("gstTotal");
-const grandTotal = document.getElementById("grandTotal");
-const narration = document.getElementById("narration");
-const branch = document.getElementById("branch");
-const invNo = document.getElementById("invNo");
-const dateDisplay = document.getElementById("dateDisplay");
-const date = document.getElementById("date");
-
-// ===== CALC =====
+// ===== CALCULATION =====
 function calc(){
 let val = parseFloat(taxableInput.value)||0;
 let gst = val * 0.18;
@@ -29,39 +139,27 @@ gstTotal.innerText = gst.toFixed(2);
 grandTotal.innerText = total.toFixed(2);
 }
 
-if(taxableInput){
 taxableInput.addEventListener("input", calc);
-}
 
-// ===== AUTO RESIZE =====
-function autoResize(){
-if(!narration) return;
-narration.style.height = "auto";
-narration.style.height = narration.scrollHeight + "px";
-}
+// ===== TEXTAREA AUTO RESIZE =====
+narration.addEventListener("input", function(){
+this.style.height="auto";
+this.style.height=this.scrollHeight+"px";
+});
 
-if(narration){
-narration.addEventListener("input", autoResize);
-narration.addEventListener("paste", autoResize);
-setTimeout(autoResize, 100);
-}
-
-// ===== DATE =====
-if(dateDisplay && date){
+// ===== DATE PICKER =====
 dateDisplay.addEventListener("focus", ()=>date.showPicker());
 
 date.addEventListener("change", ()=>{
 let d = new Date(date.value);
 dateDisplay.value = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 });
-}
 
 // ===== VALIDATION =====
 function validate(){
 let valid=true;
 
 [branch, invNo, dateDisplay, narration, taxableInput].forEach(el=>{
-if(!el) return;
 el.classList.remove("error");
 if(!el.value){
 el.classList.add("error");
@@ -69,7 +167,7 @@ valid=false;
 }
 });
 
-if(invNo && !invNo.value.startsWith("VSC/2627/")){
+if(!invNo.value.startsWith("VSC/2627/")){
 alert("Invoice must start with VSC/2627/");
 return false;
 }
@@ -77,52 +175,39 @@ return false;
 return valid;
 }
 
-// ===== CLEAN FILE NAME =====
-function cleanFileName(name){
-return name.replace(/[\\\/:*?"<>|]/g, '').trim();
-}
-
 // ===== PDF =====
-window.generate = function(preview){
+function generate(preview){
 
 if(!validate()) return;
 
 let btn = document.querySelector(".no-print");
-if(btn) btn.style.display="none";
+btn.style.display="none";
 
 let element = document.getElementById('invoice-root');
 
-// FILE NAME
-let inv = invNo ? invNo.value.split('/').pop().trim() : "Bill";
-let narrationText = narration ? narration.value.trim() : "";
-
-let fileName = cleanFileName(`Bill No. ${inv} ${narrationText || 'Invoice'}.pdf`);
-
 let opt = {
 margin:10,
+filename:"invoice.pdf",
 html2canvas:{scale:2},
 jsPDF:{unit:"mm",format:"a4"}
 };
 
 if(preview){
-html2pdf().set(opt).from(element).toPdf().output('datauristring').then(uri=>{
+html2pdf().set(opt).from(element).toPdf().outputPdf('datauristring').then(uri=>{
 window.open(uri);
-if(btn) btn.style.display="block";
+btn.style.display="block";
 });
 }else{
-html2pdf().set(opt).from(element).toPdf().output('blob').then(blob=>{
-let link = document.createElement('a');
-link.href = URL.createObjectURL(blob);
-link.download = fileName;
-link.click();
-if(btn) btn.style.display="block";
+html2pdf().set(opt).from(element).save().then(()=>{
+btn.style.display="block";
 });
 }
 }
 
-window.downloadPDF = function(){ generate(false) }
-window.previewPDF = function(){ generate(true) }
-
-});
+function downloadPDF(){generate(false)}
+function previewPDF(){generate(true)}
 
 </script>
+
+</body>
+</html>
