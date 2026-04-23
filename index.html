@@ -1,6 +1,8 @@
 <script>
 
-// ===== GET ELEMENTS SAFELY =====
+document.addEventListener("DOMContentLoaded", function() {
+
+// ===== GET ELEMENTS =====
 const taxableInput = document.getElementById("taxableInput");
 const gstAmt = document.getElementById("gstAmt");
 const invoiceAmt = document.getElementById("invoiceAmt");
@@ -13,7 +15,7 @@ const invNo = document.getElementById("invNo");
 const dateDisplay = document.getElementById("dateDisplay");
 const date = document.getElementById("date");
 
-// ===== CALCULATION =====
+// ===== CALC =====
 function calc(){
 let val = parseFloat(taxableInput.value)||0;
 let gst = val * 0.18;
@@ -27,32 +29,39 @@ gstTotal.innerText = gst.toFixed(2);
 grandTotal.innerText = total.toFixed(2);
 }
 
+if(taxableInput){
 taxableInput.addEventListener("input", calc);
+}
 
 // ===== AUTO RESIZE =====
 function autoResize(){
+if(!narration) return;
 narration.style.height = "auto";
 narration.style.height = narration.scrollHeight + "px";
 }
 
+if(narration){
 narration.addEventListener("input", autoResize);
 narration.addEventListener("paste", autoResize);
+setTimeout(autoResize, 100);
+}
 
-window.addEventListener("load", autoResize);
-
-// ===== DATE PICKER =====
+// ===== DATE =====
+if(dateDisplay && date){
 dateDisplay.addEventListener("focus", ()=>date.showPicker());
 
 date.addEventListener("change", ()=>{
 let d = new Date(date.value);
 dateDisplay.value = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 });
+}
 
 // ===== VALIDATION =====
 function validate(){
 let valid=true;
 
 [branch, invNo, dateDisplay, narration, taxableInput].forEach(el=>{
+if(!el) return;
 el.classList.remove("error");
 if(!el.value){
 el.classList.add("error");
@@ -60,7 +69,7 @@ valid=false;
 }
 });
 
-if(!invNo.value.startsWith("VSC/2627/")){
+if(invNo && !invNo.value.startsWith("VSC/2627/")){
 alert("Invoice must start with VSC/2627/");
 return false;
 }
@@ -74,18 +83,18 @@ return name.replace(/[\\\/:*?"<>|]/g, '').trim();
 }
 
 // ===== PDF =====
-function generate(preview){
+window.generate = function(preview){
 
 if(!validate()) return;
 
 let btn = document.querySelector(".no-print");
-btn.style.display="none";
+if(btn) btn.style.display="none";
 
 let element = document.getElementById('invoice-root');
 
-// ===== FILE NAME =====
-let inv = invNo.value.split('/').pop().trim();
-let narrationText = narration.value.trim();
+// FILE NAME
+let inv = invNo ? invNo.value.split('/').pop().trim() : "Bill";
+let narrationText = narration ? narration.value.trim() : "";
 
 let fileName = cleanFileName(`Bill No. ${inv} ${narrationText || 'Invoice'}.pdf`);
 
@@ -98,7 +107,7 @@ jsPDF:{unit:"mm",format:"a4"}
 if(preview){
 html2pdf().set(opt).from(element).toPdf().output('datauristring').then(uri=>{
 window.open(uri);
-btn.style.display="block";
+if(btn) btn.style.display="block";
 });
 }else{
 html2pdf().set(opt).from(element).toPdf().output('blob').then(blob=>{
@@ -106,12 +115,14 @@ let link = document.createElement('a');
 link.href = URL.createObjectURL(blob);
 link.download = fileName;
 link.click();
-btn.style.display="block";
+if(btn) btn.style.display="block";
 });
 }
 }
 
-function downloadPDF(){generate(false)}
-function previewPDF(){generate(true)}
+window.downloadPDF = function(){ generate(false) }
+window.previewPDF = function(){ generate(true) }
+
+});
 
 </script>
